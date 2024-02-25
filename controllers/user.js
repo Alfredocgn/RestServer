@@ -1,41 +1,80 @@
 const {response} = require('express')
-const User = require('../models/user')
+const bcryptjs = require('bcryptjs')
+const User = require('../models/user');
 
 
-const usersGet = (req,res = response) =>{
 
-  const query = req.query;
+const usersGet = async (req,res = response) =>{
+
+  const {lim = 5,start = 0} = req.query;
+  const query = {state:true}
+
+  // const users = await User.find(query).skip(Number(start)).limit(Number(lim))
+  // const total = await User.countDocuments(query)
+  const [total,users] = await Promise.all([User.countDocuments(query),User.find(query).skip(Number(start)).limit(Number(lim))])
 
     res.json({
-      msg: 'get API-controlador',
-      query
+      total,
+      users
+
     })
   
 }
-
-const usersPut = (req,res = response) =>{
-
-  const id = req.params.id
-
-  res.json({
-    msg:'put API-controler',
-    id
-  })
-}
 const usersPost = async (req,res = response) =>{
 
-  const body = req.body;
-  const user = new User(body)
+
+
+  const {name,email,password,rol} = req.body;
+  const user = new User({name,email,password,rol})
+
+
+
+
+  const salt = bcryptjs.genSaltSync();
+  user.password = bcryptjs.hashSync(password,salt)
+
+
+
+
   await user.save();
   res.json({
     msg:'post API-controler',
     user
   })
 }
-const usersDelete = (req,res = response) =>{
-  res.json({
-    msg:'Delete API-controler'
-  })
+
+const usersPut = async (req,res = response) =>{
+
+  const {id} = req.params;
+  const {_id,password,google,email, ...info} =req.body;
+
+  if(password){
+
+    const salt = bcryptjs.genSaltSync();
+    info.password = bcryptjs.hashSync(password,salt)
+    
+
+  }
+
+  const user = await User.findByIdAndUpdate(id,info)
+
+
+
+
+  res.json(user)
+}
+
+const usersDelete = async  (req,res = response) =>{
+  const {id} = req.params;
+
+  //BORRADO FISICO
+  // const user = await User.findByIdAndDelete(id);
+
+  const user = await User.findByIdAndUpdate(id,{state:false})
+
+  res.json(
+    user
+  )
 }
 
 
