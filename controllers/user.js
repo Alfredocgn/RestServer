@@ -24,8 +24,8 @@ const usersPost = async (req,res = response) =>{
 
 
 
-  const {name,email,password,rol} = req.body;
-  const user = new User({name,email,password,rol})
+  const {name,email,password,role} = req.body;
+  const user = new User({name,email,password,role})
 
 
 
@@ -66,14 +66,16 @@ const usersPut = async (req,res = response) =>{
 
 const usersDelete = async  (req,res = response) =>{
   const {id} = req.params;
+  const uid = req.uid;
 
   //BORRADO FISICO
   // const user = await User.findByIdAndDelete(id);
 
   const user = await User.findByIdAndUpdate(id,{state:false})
 
+
   res.json(
-    user
+    {user}
   )
 }
 
